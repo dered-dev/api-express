@@ -42,7 +42,7 @@ app.get('/koders', (req, response) => {
 
 app.get('/koders/:id', (request, response) => {
   fs.readFile('./koders.json', (err, data) => {
-    if (err) throw new Error(`Can't find koder with id ${idKoder}`)
+    if (err) throw err
     try {
       var kodersList = JSON.parse(data)
       var {
@@ -70,18 +70,78 @@ app.get('/koders/:id', (request, response) => {
 
 app.get('/koders/name/:name', (request, response) => {
   fs.readFile('./koders.json', (err, data) => {
-    if (err) throw new Error(`Can't find koder with id ${idKoder}`)
+    if (err) throw err
     try {
       var kodersList = JSON.parse(data)
-      var nameKoder = request.params.name
+      var nameKoder = request.params.name.toLowerCase()
       var dataKoders = kodersList
-      var koder = dataKoders.filter(koder => koder.name === nameKoder)
+      var koder = dataKoders.filter(koder => koder.name.toLowerCase() === nameKoder)
       if (koder.length <= 0) throw new Error(`Can't find koder with name ${nameKoder}`)
       response.json({
         success: true,
         data: {
           koder
         }
+      })
+    } catch (error) {
+      response.status(404)
+      response.send({
+        success: false,
+        error: error.message
+      })
+    }
+  })
+})
+
+app.post('/koders', (request, response) => {
+  fs.readFile('./koders.json', 'utf8', function (error, data) {
+    if (error) throw error
+    try {
+      var obj = []
+      obj = JSON.parse(data)
+      console.log(obj)
+      obj.push(request.query)
+      console.log(obj)
+      fs.writeFile('./koders.json', JSON.stringify(obj), 'utf8', (error, data) => {
+        if (error) throw error
+        response.json({
+          success: true,
+          data: {
+            koder: data
+          }
+        })
+      })
+    } catch (error) {
+      response.status(404)
+      response.send({
+        success: false,
+        error: error.message
+      })
+    }
+  })
+})
+app.delete('/koders/:id', (request, response) => {
+  fs.readFile('./koders.json', 'utf8', function (error, data) {
+    if (error) throw error
+
+    try {
+      var obj = []
+      if (JSON.parse(data).length > 0) {
+        var newData = JSON.parse(data).filter(element => element.id !== request.params.id)
+        console.log(data)
+        obj = newData
+      } else {
+        obj = ''
+      }
+      var json = JSON.stringify(obj)
+      fs.writeFile('./koders.json', json, 'utf8', (error, data) => {
+        if (error) throw error
+        response.json({
+          success: true,
+          data: {
+            koder: data
+          }
+        })
       })
     } catch (error) {
       response.status(404)
